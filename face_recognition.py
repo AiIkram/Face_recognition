@@ -20,7 +20,7 @@ def main():
         return
 
     # Video Capture Setup
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Try changing to 0, 1, 2 if needed
+    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)  # Try changing to 0, 1, 2 if needed
     if not cap.isOpened():
         st.error("Unable to access the webcam. Ensure your camera is connected and permissions are granted.")
         print("Failed to open webcam.")  # Print debug message
