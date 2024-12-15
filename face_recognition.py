@@ -1,14 +1,15 @@
-
-
 import cv2
 import streamlit as st
-
+import numpy as np
 
 face_cascade = cv2.CascadeClassifier('/workspaces/Face_recognition/haarcascade_frontalface_default.xml')
 
 def detect_faces():
     # Initialize the webcam
     cap = cv2.VideoCapture(0)
+
+    # Create a placeholder for the video feed in Streamlit
+    stframe = st.empty()
 
     while True:
         # Capture frames from the webcam
@@ -24,17 +25,17 @@ def detect_faces():
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        # Display the frame
-        cv2.imshow('Face Detection', frame)
+        # Convert frame from BGR to RGB for Streamlit
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Exit the loop on pressing 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # Display the frame in Streamlit
+        stframe.image(frame_rgb, channels="RGB", use_column_width=True)
 
-    # Release the webcam and close all OpenCV windows
+        # Exit the loop on pressing 'q' (but in Streamlit we can't use keypress in the same way)
+        # Instead, we can stop after a certain number of frames or when the button is pressed
+
+    # Release the webcam
     cap.release()
-    cv2.destroyAllWindows()
-
 
 def app():
     st.title("Real-Time Face Detection")
@@ -46,6 +47,3 @@ def app():
 
 if __name__ == "__main__":
     app()
-
-
-
