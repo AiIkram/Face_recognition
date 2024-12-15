@@ -80,7 +80,6 @@ In this tutorial, we will implement a basic facial recognition system using Pyth
 - `streamlit`: A Python library for creating interactive web apps.
 """
 
-!pip install streamlit
 
 import cv2
 import streamlit as st
