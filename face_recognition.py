@@ -1,7 +1,6 @@
 import streamlit as st
 import cv2
 import numpy as np
-import tempfile
 
 def main():
     # Page Configuration
@@ -21,13 +20,21 @@ def main():
         return
 
     # Video Capture Setup
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Try changing to 0, 1, 2 if needed
     if not cap.isOpened():
         st.error("Unable to access the webcam. Ensure your camera is connected and permissions are granted.")
+        print("Failed to open webcam.")  # Print debug message
         return
+    else:
+        print("Webcam opened successfully.")  # Debug message
+
+    # Check camera resolution
+    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    print(f"Camera resolution: {width} x {height}")
 
     st.write("Press the **Stop** button to end the video.")
-
+    
     frame_placeholder = st.empty()  # Placeholder for video frames
     stop_button = st.button("Stop")  # Stop button
 
