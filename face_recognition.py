@@ -1,30 +1,49 @@
-import streamlit as st
 import cv2
-import numpy as np 
-import tempfile
+import streamlit as st
+import numpy as np
 
-def main():
-    st.set_page_config(page_title="Facial Detection")
-    st.title("Facial Recognition Web App")
-    st.caption("Powered by OpenCV, Streamlit")
-    face_cascade = cv2.CascadeClassifier("haarcascade-frontalface-default.xml")
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+def detect_faces():
+    # Initialize the webcam
     cap = cv2.VideoCapture(0)
-    frame_placeholder = st.empty()
-    stop_button_pressed = st.button("Stop")
-    while cap.isOpened() and not stop_button_pressed:
+
+    # Create a placeholder for the video feed in Streamlit
+    stframe = st.empty()
+
+    while True:
+        # Capture frames from the webcam
         ret, frame = cap.read()
-        if not ret:
-            st.write("Video Capture Ended")
-            break
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_coordinates = face_cascade.detectMultiScale(gray_frame)
-        for (fx, fy, fw, fh) in face_coordinates:
-            cv2.rectangle(frame, (fx, fy), (fx + fw, fy + fh), (0, 255, 0), 2)
-        frame_placeholder.image(frame,channels="BGR")
-        if cv2.waitKey(1) & 0xFF == ord("q") or stop_button_pressed:
-            break
+
+        # Convert the frame to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Detect faces
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
+
+        # Draw rectangles around detected faces
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Convert frame from BGR to RGB for Streamlit
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Display the frame in Streamlit
+        stframe.image(frame_rgb, channels="RGB", use_column_width=True)
+
+        # Exit the loop on pressing 'q' (but in Streamlit we can't use keypress in the same way)
+        # Instead, we can stop after a certain number of frames or when the button is pressed
+
+    # Release the webcam
     cap.release()
-    cv2.destroyAllWindows()
+
+def app():
+    st.title("Real-Time Face Detection")
+    st.write("Click the button below to start detecting faces using your webcam.")
+
+    # Button to trigger face detection
+    if st.button("Start Detection"):
+        detect_faces()
 
 if __name__ == "__main__":
-    main()
+    app()
