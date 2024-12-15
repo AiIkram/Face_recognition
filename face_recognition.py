@@ -2,7 +2,7 @@ import cv2
 import streamlit as st
 import numpy as np
 
-face_cascade = cv2.CascadeClassifier('/workspaces/Face_recognition/haarcascade_frontalface_default.xml')
+face_cascade = cv2.CascadeClassifier('Face_recognition/haarcascade_frontalface_default.xml')
 
 def detect_faces():
     # Initialize the webcam
