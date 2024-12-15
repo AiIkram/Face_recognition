@@ -1,88 +1,63 @@
-import streamlit as st
-import streamlit.components.v1 as components
 import cv2
-import logging as log
-import datetime as dt
-from time import sleep
-from deepface import DeepFace
+import streamlit as st
 
+def main():
+    # Page Configuration for Streamlit
+    st.set_page_config(page_title="Facial Recognition", layout="centered")
+    st.title("Facial Recognition Web App")
+    st.caption("Powered by OpenCV and Streamlit")
 
-cascPath = "./haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascPath)
-log.basicConfig(filename='webcam.log',level=log.INFO)
+    # Load Haar Cascade for face detection
+    cascade_path = "./haarcascade_frontalface_default.xml"  # Adjust path if necessary
+    try:
+        face_cascade = cv2.CascadeClassifier(cascade_path)
+        if face_cascade.empty():
+            st.error("Error loading Haar Cascade file. Ensure the XML file is in the correct directory.")
+            return
+    except Exception as e:
+        st.error(f"Error loading Haar Cascade: {e}")
+        return
 
-video_capture = cv2.VideoCapture(0)
-anterior = 0
+    # Attempt to access the webcam
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Using DirectShow on Windows
+    if not cap.isOpened():
+        st.error("Unable to access the webcam. Ensure your camera is connected and permissions are granted.")
+        return
 
-st.title("HP's Face Detection Project !")
+    st.write("Press the **Stop** button to end the video.")
 
-st.write("The app uses Haar Cascade Classifier. It is a machine learning based approach where a "
-         "cascade function is trained from a lot of positive and negative images which is then used to "
-         "detect objects in other images.")
+    frame_placeholder = st.empty()  # Placeholder for video frames
+    stop_button = st.button("Stop")  # Stop button
 
-st.write("The app also uses DeepFace to detect your current emotion, gender and race. This is a very simple opencv application")
-
-# Building a sidebar
-st.sidebar.subheader("Details of the person")
-t1 = st.sidebar.text_input("Name of the Person ")
-s1 = st.sidebar.slider("Age of the person ")
-r1 = st.sidebar.selectbox("Race:",['Asian','Indian','Black','White','Middle Eastern','Latino Hispanic'] )
-
-
-st.subheader('Details of the User:')
-st.write("Name: ",t1)
-st.write("Age: ", s1) 
-st.write("Race: ", r1)# taking data from the sidebar
-
-
-
-
-if st.button("Can I detect your face ?"):
-    st.write('Press "q" to close the Camera Window')
-    # Selection box
-    # first argument takes the titleof the selectionbox second argument takes options
-    How_is_Project = st.selectbox("How did the Face Detection Work : ",['Choose an Option :','Useless', 'So so', 'Good', 'Perfect'])
-    st.write("Thank you")
-    while True:
-        if not video_capture.isOpened():
-            print('Unable to load camera.')    
-            sleep(5)
-            pass
-
-        # Capture frame-by-frame
-        ret, frame = video_capture.read()
-        result = DeepFace.analyze(frame, actions =['emotion','gender','age','race'], enforce_detection= False)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        faces = faceCascade.detectMultiScale(gray,scaleFactor=1.1,minNeighbors=4)
-
-        # Draw a rectangle around the faces
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-        cv2.putText(frame,result['dominant_emotion'],(50,50),font,2,(0,0,255),2,cv2.LINE_4)
-        cv2.putText(frame,str(result['age']),(50,100),font,2,(0,0,255),2,cv2.LINE_4)
-        cv2.putText(frame,result['gender'],(50,250),font,2,(0,0,255),2,cv2.LINE_4)
-        cv2.putText(frame,result['dominant_race'],(50,400),font,2,(0,0,255),2,cv2.LINE_4)
-
-
-
-        if anterior != len(faces):
-            anterior = len(faces)
-            log.info("faces: " + str(len(faces)) + " at " + str(dt.datetime.now()))
-
-        # Display the resulting frame
-        cv2.imshow('Video', frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            st.warning("Failed to grab a frame. Exiting...")
             break
 
-        # Display the resulting frame
-        cv2.imshow('Video', frame)
+        # Convert the frame to grayscale
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+        # Detect faces in the frame
+        face_coordinates = face_cascade.detectMultiScale(
+            gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+        )
 
-# When everything is done, release the capture
-video_capture.release()
-cv2.destroyAllWindows()
+        # Draw rectangles around detected faces
+        for (fx, fy, fw, fh) in face_coordinates:
+            cv2.rectangle(frame, (fx, fy), (fx + fw, fy + fh), (0, 255, 0), 2)
+
+        # Display the frame in Streamlit
+        frame_placeholder.image(frame, channels="BGR", use_column_width=True)
+
+        # Check if the stop button is pressed
+        if stop_button:
+            st.write("Stopping video stream...")
+            break
+
+    # Release resources and stop the webcam
+    cap.release()
+    st.write("Video capture stopped.")
+
+if __name__ == "__main__":
+    main()
