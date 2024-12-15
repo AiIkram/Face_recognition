@@ -10,7 +10,7 @@ def main():
     st.caption("Powered by OpenCV, Streamlit")
 
     # Load Haar Cascade
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    face_cascade = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 
     # Video Capture
     cap = cv2.VideoCapture(2)  # Access webcam
