@@ -1,6 +1,6 @@
 
 
-from cv2 import cv2
+from opencv import cv2
 import streamlit as st
 
 
