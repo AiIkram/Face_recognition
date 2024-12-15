@@ -18,10 +18,13 @@ def main():
         st.error(f"Error loading Haar Cascade: {e}")
         return
 
-    # Attempt to access the webcam
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Using DirectShow on Windows
+    # Video File Path
+    video_path = "video.mp4"  # Specify the path to your video file
+
+    # Load the video file
+    cap = cv2.VideoCapture(video_path)  # Use the video file path instead of a camera index
     if not cap.isOpened():
-        st.error("Unable to access the webcam. Ensure your camera is connected and permissions are granted.")
+        st.error("Unable to open the video file. Please check the file path.")
         return
 
     st.write("Press the **Stop** button to end the video.")
@@ -32,7 +35,7 @@ def main():
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            st.warning("Failed to grab a frame. Exiting...")
+            st.warning("Failed to grab a frame or video finished. Exiting...")
             break
 
         # Convert the frame to grayscale
@@ -55,7 +58,7 @@ def main():
             st.write("Stopping video stream...")
             break
 
-    # Release resources and stop the webcam
+    # Release resources
     cap.release()
     st.write("Video capture stopped.")
 
