@@ -13,7 +13,7 @@ def main():
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
     # Video Capture
-    cap = cv2.VideoCapture(0)  # Access webcam
+    cap = cv2.VideoCapture(1)  # Access webcam
     if not cap.isOpened():
         st.error("Unable to access the webcam.")
         return
