@@ -24,8 +24,8 @@ def detect_faces_and_save(video_path, cascade_path, stop_event):
     output_path = temp_output.name
     temp_output.close()
 
-    # Video Writer with XVID codec
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    # Video Writer with mp4v codec (for MP4 container)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_path, fourcc, fps, frame_size)
 
     while cap.isOpened() and not stop_event.is_set():
