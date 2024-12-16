@@ -42,7 +42,7 @@ def main():
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
-        st.write("Processing the video. This might take a while...")
+        st.write("Processing the video. Please wait...")
 
         # Process video frames
         while cap.isOpened():
@@ -69,7 +69,11 @@ def main():
         cap.release()
         out.release()
 
-        st.video(output_path)
+        # Ensure the file is properly saved before displaying it
+        if os.path.exists(output_path):
+            st.video(output_path)
+        else:
+            st.error("There was an error processing the video. Please try again.")
 
         # Clean up the temporary files after use
         if os.path.exists(video_path):
