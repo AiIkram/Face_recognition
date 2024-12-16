@@ -12,7 +12,38 @@ def main():
     st.caption("Powered by OpenCV and Streamlit")
 
     # Load Haar Cascade for face detection
+    cascade_path = "./haarcascade_frontalface_default.xml"  # Adjust path if necessary
+    try:
+        face_cascade = cv2.CascadeClassifier(cascade_path)
+        if face_cascade.empty():
+            st.error("Error loading Haar Cascade file. Ensure the XML file is in the correct directory.")
+            return
+    except Exception as e:
+        st.error(f"Error loading Haar Cascade: {e}")
+        return
 
+    # File uploader widget to allow users to upload a video
+    video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov", "mkv"])
+    if video_file is not None:
+        # Create a temporary file to save the uploaded video
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(video_file.read())
+            video_path = temp_file.name
+
+        # Load the uploaded video file
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            st.error("Unable to open the video file. Please check the file format or try again.")
+            return
+
+        st.write("Press the **Stop** button to end the video.")
+
+        frame_placeholder = st.empty()  # Placeholder for video frames
+        stop_button = st.button("Stop")  # Stop button
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
                 st.warning("Failed to grab a frame or video finished. Exiting...")
                 break
 
