@@ -2,8 +2,6 @@ import cv2
 import streamlit as st
 import tempfile
 import threading
-import time
-import os
 
 def detect_faces_and_save(video_path, cascade_path, stop_event):
     """Run face detection on frames and save the output video."""
@@ -26,8 +24,8 @@ def detect_faces_and_save(video_path, cascade_path, stop_event):
     output_path = temp_output.name
     temp_output.close()
 
-    # Video Writer with H264 codec
-    fourcc = cv2.VideoWriter_fourcc(*"H264")
+    # Video Writer with XVID codec
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
     out = cv2.VideoWriter(output_path, fourcc, fps, frame_size)
 
     while cap.isOpened() and not stop_event.is_set():
