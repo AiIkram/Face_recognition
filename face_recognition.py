@@ -1,7 +1,6 @@
 import cv2
 import streamlit as st
 import tempfile
-import os
 
 def main():
     # Page Configuration for Streamlit
@@ -34,21 +33,17 @@ def main():
             st.error("Unable to open the video file. Please check the file format or try again.")
             return
 
-        # Prepare a temporary file to save the processed video
-        output_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for mp4 format
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-
         st.write("Processing the video. Please wait...")
+        frame_placeholder = st.empty()  # Placeholder for displaying frames
 
-        # Process video frames
+        # Process the video
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
+
+            # Resize frame to speed up processing
+            frame = cv2.resize(frame, (640, 360))
 
             # Convert the frame to grayscale for face detection
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -62,24 +57,14 @@ def main():
             for (fx, fy, fw, fh) in face_coordinates:
                 cv2.rectangle(frame, (fx, fy), (fx + fw, fy + fh), (0, 255, 0), 2)
 
-            # Write the processed frame to the output video file
-            out.write(frame)
+            # Convert BGR to RGB for Streamlit
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Release resources
+            # Display the processed frame
+            frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
+
         cap.release()
-        out.release()
-
-        # Ensure the file is properly saved before displaying it
-        if os.path.exists(output_path):
-            st.video(output_path)
-        else:
-            st.error("There was an error processing the video. Please try again.")
-
-        # Clean up the temporary files after use
-        if os.path.exists(video_path):
-            os.remove(video_path)
-        if os.path.exists(output_path):
-            os.remove(output_path)
+        st.success("Video processing complete!")
 
 if __name__ == "__main__":
     main()
