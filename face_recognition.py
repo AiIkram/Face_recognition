@@ -4,37 +4,45 @@ import tempfile
 import threading
 import time
 
-def detect_faces(video_path, cascade_path, frame_callback, stop_event):
-    """Run face detection on frames and send results to the callback."""
+def detect_faces_and_stream(video_path, cascade_path, stop_event):
+    """Run face detection on frames and stream video output."""
     face_cascade = cv2.CascadeClassifier(cascade_path)
     cap = cv2.VideoCapture(video_path)
+
+    # Temporary file to store processed video
+    temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    output_path = temp_output.name
+
+    # Video Writer for processed frames
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
     while cap.isOpened() and not stop_event.is_set():
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Convert frame to grayscale for face detection
+        # Convert to grayscale and detect faces
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        # Detect faces
         faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.2, minNeighbors=3)
 
         # Draw rectangles around detected faces
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        # Send the processed frame to the callback
-        frame_callback(frame)
-
-        # Add a small delay to simulate processing time
-        time.sleep(0.03)  # 30 FPS
+        # Write processed frame to output video
+        out.write(frame)
 
     cap.release()
+    out.release()
+    return output_path
 
 def main():
-    st.set_page_config(page_title="Facial Detection", layout="centered")
-    st.title("Fast Facial Detection with Display")
+    st.set_page_config(page_title="Facial Detection Video App", layout="centered")
+    st.title("Fast Facial Detection with Video Stream")
     st.caption("Powered by OpenCV and Streamlit")
 
     cascade_path = "./haarcascade_frontalface_default.xml"
@@ -47,29 +55,24 @@ def main():
             temp_file.write(video_file.read())
             video_path = temp_file.name
 
-        st.video(video_path)  # Quickly play the original video
+        # Display the original video
+        st.video(video_path)
 
-        # Display the processed video frames
-        st.write("Processed Frames (with Face Detection):")
-        frame_placeholder = st.empty()
-
-        # Stop processing button
+        # Stop detection button
         stop_button = st.button("Stop Detection")
         stop_event = threading.Event()
 
-        def frame_callback(processed_frame):
-            """Update the Streamlit placeholder with the processed frame."""
-            frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-            frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
-
-        if not stop_button:
-            # Start the face detection thread
-            threading.Thread(
-                target=detect_faces, args=(video_path, cascade_path, frame_callback, stop_event), daemon=True
-            ).start()
-        else:
+        if stop_button:
             stop_event.set()
             st.write("Face detection stopped.")
+        else:
+            # Start face detection and video streaming
+            with st.spinner("Processing video for face detection..."):
+                processed_video_path = detect_faces_and_stream(video_path, cascade_path, stop_event)
+
+            # Display processed video
+            st.video(processed_video_path)
+            st.success("Face detection complete! Processed video displayed.")
 
 if __name__ == "__main__":
     main()
