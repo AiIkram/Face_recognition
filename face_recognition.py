@@ -17,7 +17,7 @@ def detect_faces_from_video(video_file):
         st.error("Unable to open the video file.")
         return
 
-    st.write("Press **Stop** to exit.")
+    # Set up frame placeholder for displaying video frames in Streamlit
     frame_placeholder = st.empty()
     stop_button = st.button("Stop")
 
