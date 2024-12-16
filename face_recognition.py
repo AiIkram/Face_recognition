@@ -1,7 +1,6 @@
 import cv2
 import streamlit as st
 import tempfile
-import time
 
 def main():
     st.set_page_config(page_title="Facial Detection", layout="centered")
@@ -26,29 +25,33 @@ def main():
         frame_placeholder = st.empty()
         stop_button = st.button("Stop")
 
-        frame_skip = 2
-        frame_count = 0
         while cap.isOpened():
             ret, frame = cap.read()
-            if not ret or (frame_count % frame_skip != 0):
-                frame_count += 1
-                continue
+            if not ret:
+                st.warning("Video finished.")
+                break
 
-            frame = cv2.resize(frame, (640, 360))  # Resize for faster processing
+            # Resize for faster processing
+            frame = cv2.resize(frame, (640, 360))
+
+            # Convert to grayscale for face detection
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray_frame, 1.2, 3)
+            faces = face_cascade.detectMultiScale(gray_frame, 1.1, 4)
 
+            # Draw rectangles around detected faces
             for (x, y, w, h) in faces:
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
+            # Convert frame from BGR to RGB (Streamlit expects RGB)
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Update the frame on Streamlit
             frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
 
+            # Check if the stop button is pressed
             if stop_button:
-                st.write("Stopping...")
+                st.write("Stopping video...")
                 break
-
-            time.sleep(0.03)  # Simulate ~30 FPS
 
         cap.release()
         st.write("Video processing stopped.")
