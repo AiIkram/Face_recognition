@@ -12,7 +12,7 @@ def main():
     st.caption("Powered by OpenCV and Streamlit")
 
     # Load Haar Cascade for face detection
-@@ -45,29 +44,32 @@
+
                 st.warning("Failed to grab a frame or video finished. Exiting...")
                 break
 
