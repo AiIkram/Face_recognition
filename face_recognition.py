@@ -1,6 +1,7 @@
 import cv2
 import streamlit as st
 import tempfile
+import os
 
 def main():
     # Page Configuration for Streamlit
@@ -23,25 +24,30 @@ def main():
     video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov", "mkv"])
     if video_file is not None:
         # Create a temporary file to save the uploaded video
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             temp_file.write(video_file.read())
             video_path = temp_file.name
 
-        # Load the uploaded video file
+        # Open the video file
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             st.error("Unable to open the video file. Please check the file format or try again.")
             return
 
-        st.write("Press the **Stop** button to end the video.")
+        # Prepare a temporary file to save the processed video
+        output_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for mp4 format
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
-        frame_placeholder = st.empty()  # Placeholder for video frames
-        stop_button = st.button("Stop")  # Stop button
+        st.write("Processing the video. This might take a while...")
 
+        # Process video frames
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
-                st.warning("Failed to grab a frame or video finished. Exiting...")
                 break
 
             # Convert the frame to grayscale for face detection
@@ -52,24 +58,24 @@ def main():
                 gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
             )
 
-            # Draw rectangles around detected faces (Face Detection)
+            # Draw rectangles around detected faces
             for (fx, fy, fw, fh) in face_coordinates:
                 cv2.rectangle(frame, (fx, fy), (fx + fw, fy + fh), (0, 255, 0), 2)
 
-            # Convert the BGR frame to RGB (Streamlit expects RGB format)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Display the frame in Streamlit
-            frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
-
-            # Check if the stop button is pressed
-            if stop_button:
-                st.write("Stopping video stream...")
-                break
+            # Write the processed frame to the output video file
+            out.write(frame)
 
         # Release resources
         cap.release()
-        st.write("Video capture stopped.")
+        out.release()
+
+        st.video(output_path)
+
+        # Clean up the temporary files after use
+        if os.path.exists(video_path):
+            os.remove(video_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
 
 if __name__ == "__main__":
     main()
