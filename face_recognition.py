@@ -10,13 +10,16 @@ def main():
     cascade_path = "./haarcascade_frontalface_default.xml"
     face_cascade = cv2.CascadeClassifier(cascade_path)
 
+    # File uploader for video
     video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov", "mkv"])
+    
     if video_file:
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             temp_file.write(video_file.read())
             video_path = temp_file.name
 
         cap = cv2.VideoCapture(video_path)
+
         if not cap.isOpened():
             st.error("Unable to open the video file.")
             return
@@ -45,7 +48,7 @@ def main():
             # Convert frame from BGR to RGB (Streamlit expects RGB)
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            # Update the frame on Streamlit
+            # Update the frame in the placeholder
             frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
 
             # Check if the stop button is pressed
